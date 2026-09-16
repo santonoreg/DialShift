@@ -1,65 +1,140 @@
 # DialShift
 
-**Your radio, on time.** A native Windows tray radio with a weekly listening schedule.
+**Your radio, on time.** A desktop radio for Windows and Mac that automatically
+switches stations to follow your weekly listening schedule.
 
-## Download for Windows
+## Download
 
-**[Download DialShift v0.1.0 for Windows (ZIP)](https://github.com/tsiger/DialShift/releases/download/v0.1.0/DialShift-0.1.0-win-x64.zip)** · [All releases](https://github.com/tsiger/DialShift/releases)
+| Platform | Ready-to-run app | Requirements |
+| --- | --- | --- |
+| Windows | **[Download Windows ZIP](https://github.com/tsiger/DialShift/releases/download/v0.2.0/DialShift-0.2.0-win-x64.zip)** | Windows 10/11, x64 |
+| Mac | **[Download Mac ZIP](https://github.com/tsiger/DialShift/releases/download/v0.2.0/DialShift-0.2.0-osx-arm64.zip)** | Apple Silicon (M-series), macOS 14 Sonoma or newer |
 
-1. Download the **DialShift-0.1.0-win-x64.zip** asset from the release above.
-2. Extract the entire ZIP to a folder.
-3. Open **DialShift.exe** inside that folder.
+**[Release notes and checksums](https://github.com/tsiger/DialShift/releases/tag/v0.2.0)** · [All releases](https://github.com/tsiger/DialShift/releases)
 
-Windows 10/11, x64. The portable app includes .NET and VLC; no separate dependencies or administrator rights are needed. Keep the whole extracted folder together, not just the `.exe`.
+Both downloads include .NET. Windows also bundles VLC; Mac uses the built-in macOS
+audio player. **No separate runtime or player installation is needed.** Intel Macs,
+Windows ARM and Linux do not have release downloads yet.
 
-GitHub's **Code → Download ZIP** and the automatically generated **Source code** archives contain source files, not the ready-to-run app. Use the download link above to listen without building anything.
+GitHub's **Code → Download ZIP** and the **Source code** archives contain source
+files. Use the platform links above to get the ready-to-run app.
 
-Optional install: right-click `Install.ps1` in the extracted release and choose **Run with PowerShell**. It copies the app to `%LOCALAPPDATA%\Programs\DialShift` and adds a Start menu shortcut, without administrator rights. It does not enable Windows startup unless you already chose that setting.
+### Windows
 
-## Listen
+1. Download and extract the entire Windows ZIP.
+2. Open **DialShift.exe** inside the extracted folder.
+3. Keep the whole folder together, including its libraries.
 
-- **Stations → Add station:** name, optional description, direct HTTP/HTTPS audio URL. MP3, AAC and HLS are handled by VLC. Ordinary webpage URLs and playlist files that require selecting a child stream are not supported; use the direct stream URL.
-- **Schedule → Add time slot:** choose a station, 24-hour start time and days. Optional show label and enabled toggle. Conflicting enabled slots on the same day/time are rejected.
-- Turn on **Follow my schedule** to immediately tune into the latest matching slot, even if that slot began on a previous day.
-- Each station continues until the next scheduled start. There are no end-time/stop slots in this version.
-- Manual station selection and Pause last until the next scheduled switch. Pause disconnects the live stream; Play rejoins live rather than replaying buffered audio.
-- The schedule repeats weekly in the Windows local time zone. Sleep/resume and missed starts catch up to the current slot. It does not wake a sleeping computer. During a repeated daylight-saving hour, a slot fires once per running session; skipped starts catch up after the jump.
-- A failed or stalled stream retries, then uses your optional fallback after three failures. While playing a fallback, the original is retried every two minutes. With no fallback, retries continue every 30 seconds after the initial quick retries.
-- Closing/minimizing the window keeps the app running in the notification area. Double-click the tray icon to reopen; right-click for playback, stations, volume, schedule toggle and **Quit DialShift**.
-- **Settings:** optional launch at Windows sign-in, start in tray, fallback station and local settings folder. Startup is off by default. No playback starts on first launch until you press Play or enable a populated schedule.
+The app is portable and does not require administrator rights. Optional install:
+right-click `Install.ps1` in the extracted folder and choose **Run with PowerShell**.
+This copies the app to `%LOCALAPPDATA%\Programs\DialShift` and adds a Start menu
+shortcut. Launch at sign-in is an opt-in setting.
 
-## Data
+### Mac
 
-Preferences live at `%LOCALAPPDATA%\DialShift\settings.json`, with atomic writes. An unreadable file is preserved as `settings.json.unreadable-*` before defaults are used. Back up this folder to move stations and schedules. Diagnostic errors go to `dialshift.log` in the same folder. No account, server, analytics or cloud sync. Listening connects directly to each selected radio provider.
+1. Download and unzip the Mac ZIP.
+2. Drag **DialShift.app** into **Applications**, then open it. Running from another
+   folder, such as the Desktop, also works.
+3. The app is ad-hoc signed, **not Apple-notarized**. If macOS blocks it, attempt to
+   open it once, then use **System Settings → Privacy & Security → Open Anyway**
+   for DialShift and confirm Open.
+
+To update either platform, quit DialShift using its tray/menu-bar menu before
+replacing the app files. Your stations and schedule are stored separately and remain
+intact. [More Mac setup, import and build instructions](MACOS.md).
+
+## Make radio a routine
+
+- **Stations → Add station:** enter a name, optional description and direct HTTP/HTTPS
+  audio stream URL. MP3, AAC and HLS are supported. Use a stream URL, not the station's
+  webpage or a playlist that requires choosing a child stream.
+- **Schedule → Add time slot:** choose a station, 24-hour start time and days. Add an
+  optional show label. Conflicting enabled slots on the same day/time are rejected.
+- Turn on **Follow my schedule** to tune into the latest matching slot immediately.
+  Each station plays until the next scheduled start; there are no end-time/stop slots.
+- Pick a station manually or press **Pause** to override the current slot until the
+  next scheduled switch. Play reconnects to the live broadcast.
+- Schedules repeat weekly in your computer's local time zone and catch up after
+  sleep or a missed start. DialShift does not wake a sleeping computer. A repeated
+  daylight-saving occurrence fires once per running session.
+- Failed streams retry, then use your optional fallback after three failures. While
+  a fallback plays, DialShift retries the original every two minutes.
+- Closing the window keeps the app running in the Windows tray or Mac menu bar.
+  Reopen it from the icon; use the icon's menu for playback, stations, volume,
+  schedule toggle and **Quit DialShift**. The Mac Dock icon also reopens the window.
+- **Settings:** optional launch at login, start hidden, fallback station and settings
+  folder. Playback stays idle on first launch until you press Play or enable a schedule.
+
+Both builds start with three SomaFM stations:
+[Groove Salad](https://somafm.com/groovesalad/directstreamlinks.html),
+[Drone Zone](https://somafm.com/dronezone/directstreamlinks.html), and
+[Secret Agent](https://somafm.com/secretagent/directstreamlinks.html).
+Add your own favorites. Personal stations and schedules are never bundled in releases.
+
+### Mac status
+
+Playback and station/schedule editing have been manually confirmed on an Apple
+Silicon Mac running macOS 15.7.3. This release includes the fix for a crash when
+refreshing the menu after edits. The Mac interface has some cosmetic rough edges;
+track-title metadata is not available yet, so it shows the station description.
+Actual Mac login and hardware sleep/wake behavior still need broader testing.
+
+## Your data
+
+| Platform | Settings and logs |
+| --- | --- |
+| Windows | `%LOCALAPPDATA%\DialShift\` |
+| Mac | `~/Library/Application Support/DialShift/` |
+
+Preferences are saved atomically in `settings.json`. Unreadable files are preserved
+as `settings.json.unreadable-*` before defaults are used. Errors go to `dialshift.log`.
+No account, analytics, server or cloud sync; playback connects directly to the selected
+radio provider.
+
+**Move your Windows stations to Mac:** copy the Windows `settings.json`, then choose
+**Settings → Import stations & schedule…** in the Mac app (scroll down). Import asks
+before replacing the current stations/schedule and saves a backup. Mac also offers
+**Export stations & schedule…**. Startup settings stay specific to each installation.
 
 ## Build and verify
 
-Requires a .NET 10 SDK on Windows. The build script also recognizes a local SDK at `%LOCALAPPDATA%\DialShift\sdk`.
+Requires a .NET 10 SDK. The PowerShell scripts also recognize the local SDK at
+`%LOCALAPPDATA%\DialShift\sdk`.
 
 ```powershell
+# Windows app, built on Windows
 ./scripts/build.ps1
-```
 
-Core checks without external test packages:
+# Apple Silicon app, cross-built on Windows; also requires Python 3
+./scripts/build-macos.ps1
 
-```powershell
+# Deterministic scheduling, persistence and playback-controller checks
 dotnet run --project DialShift.Tests -c Release
+dotnet run --project DialShift.Desktop.Tests -c Release
 ```
 
-Application integration checks (isolated temporary preferences, muted live playback, no startup changes):
+Builds go to ignored `artifacts/` directories. To publish Windows into a separate
+folder while an existing copy is running, pass `-OutputDirectory C:\path\to\output`.
+The Mac script bundles the app, ad-hoc signs it, verifies code/resource hashes and
+creates a ZIP with Unix executable permissions. See [MACOS.md](MACOS.md) for details.
 
-```powershell
-./artifacts/DialShift-win-x64/DialShift.exe --smoke-test --output C:\temp\dialshift-checks
-```
-
-Writes `results.json` and UI renders, then exits. Live-stream checks require network access. `--recovery-test` together with `--smoke-test` additionally checks retry/fallback using an intentionally unavailable local endpoint. Hardware sleep, actual Windows sign-in and audible output require a manual check on the target PC.
+The Windows and Mac executables support `--smoke-test --output <folder>` for isolated,
+muted playback and UI checks. They write `results.json` and screenshots, then exit.
+Live-stream checks require network access. Windows additionally supports
+`--recovery-test` with `--smoke-test` to exercise retry/fallback against an unavailable
+local endpoint. Mac checks cover editor validation, save/edit/delete, persistence,
+and menu refreshes. Hardware sleep, login and audible output require target-machine
+testing.
 
 ## Project
 
-- `DialShift.Core`: station/settings models, local persistence, weekly schedule evaluation and occurrence tracking.
-- `DialShift`: WPF interface, native notification icon, LibVLC playback, retry/fallback and Windows startup/resume integration.
-- `DialShift.Tests`: deterministic scheduling, persistence and validation checks.
+- `DialShift.Core`: shared models, persistence, weekly scheduling and occurrence tracking.
+- `DialShift`: Windows WPF interface, tray controls, LibVLC playback and Windows integration.
+- `DialShift.Desktop`: Mac Avalonia interface, menu-bar controls and native AVPlayer audio.
+  Its development-only Windows preview uses separate `DialShift-Preview` preferences.
+- `DialShift.Tests`: scheduling and persistence checks.
+- `DialShift.Desktop.Tests`: playback-controller checks with a simulated audio backend.
 
-Starter stations use SomaFM's published direct stream links: [Groove Salad](https://somafm.com/groovesalad/directstreamlinks.html), [Drone Zone](https://somafm.com/dronezone/directstreamlinks.html), [Secret Agent](https://somafm.com/secretagent/directstreamlinks.html). Streams can change; edit a station to update its URL. Station names belong to their respective owners; DialShift is unaffiliated.
-
+Station names and broadcasts belong to their respective providers. DialShift is
+unaffiliated. Stream URLs can change; edit a station to update its URL.
 See [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) for bundled dependencies.

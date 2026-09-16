@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>DialShift</AssemblyName>
+    <Version>0.2.0</Version>
+    <ApplicationIcon>../DialShift/Assets/dialshift.ico</ApplicationIcon>
+    <PublishTrimmed>false</PublishTrimmed>
+    <UseAppHost>true</UseAppHost>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../DialShift.Core/DialShift.Core.csproj" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.2" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.2" />
+    <AvaloniaResource Include="Assets/**" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+    <PackageReference Include="LibVLCSharp" Version="3.10.1" />
+    <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.23.1" />
+  </ItemGroup>
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
+    <DefineConstants>$(DefineConstants);WINDOWS_PREVIEW</DefineConstants>
+    <LibVLCIncludeWindowsX86>false</LibVLCIncludeWindowsX86>
+    <LibVLCIncludeWindowsX64>true</LibVLCIncludeWindowsX64>
+    <LibVLCIncludeWindowsARM64>false</LibVLCIncludeWindowsARM64>
+  </PropertyGroup>
+</Project>

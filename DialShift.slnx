@@ -1,5 +1,7 @@
 <Solution>
   <Project Path="DialShift.Core/DialShift.Core.csproj" />
+  <Project Path="DialShift.Desktop/DialShift.Desktop.csproj" />
+  <Project Path="DialShift.Desktop.Tests/DialShift.Desktop.Tests.csproj" />
   <Project Path="DialShift.Tests/DialShift.Tests.csproj" />
   <Project Path="DialShift/DialShift.csproj" />
 </Solution>

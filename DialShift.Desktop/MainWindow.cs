@@ -1,18 +1,22 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Windows;
-using System.Windows.Automation;
-using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
+using Avalonia;
+using Avalonia.Layout;
+using Avalonia.Automation;
+
+using Avalonia.Controls;
+using Avalonia.Media;
+
 using DialShift.Core;
 
-namespace DialShift;
+namespace DialShift.Desktop;
 
 public sealed class MainWindow : Window
 {
     private readonly App app;
+    private readonly TextBlock notice = Text("", 12, false, "#FFB5A7");
+    public void ShowNotice(string message) { notice.Text = message; }
     private readonly StackPanel page = new();
     private readonly TextBlock stationTitle = Text("Your next favorite frequency.", 30, true);
     private readonly TextBlock status = Text("READY WHEN YOU ARE", 11, true, "#C2F278");
@@ -27,17 +31,17 @@ public sealed class MainWindow : Window
     private int tab;
     private int selectedDay = ((int)DateTime.Now.DayOfWeek + 6) % 7;
     public static readonly DayOfWeek[] Week = [DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday, DayOfWeek.Sunday];
-    public static Brush Brush(string hex) => new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
+    public static IBrush Brush(string hex) => new SolidColorBrush(Color.Parse(hex));
 
     public MainWindow(App app)
     {
         this.app = app;
-        Style = (Style)app.FindResource(typeof(Window));
-        NativeChrome.Apply(this);
+        Background = Brush("#111C1E");
+        FontFamily = FontFamily.Default;
         Title = "DialShift";
         Width = 1050; Height = 860; MinWidth = 780; MinHeight = 650;
         WindowStartupLocation = WindowStartupLocation.CenterScreen;
-        Icon = BitmapFrame.Create(new Uri("pack://application:,,,/Assets/dialshift.ico"));
+        Icon = App.Icon();
         var shell = new Grid { Margin = new Thickness(30, 22, 30, 20) };
         shell.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         shell.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
@@ -47,7 +51,7 @@ public sealed class MainWindow : Window
         Content = shell;
 
         var header = new DockPanel { Margin = new Thickness(0, 0, 0, 25) };
-        var trayButton = Button("↘  Hide to tray", () => app.HideToTray());
+        var trayButton = Button("↘  Hide to menu bar", () => app.HideToTray());
         DockPanel.SetDock(trayButton, Dock.Right); header.Children.Add(trayButton);
         var brand = new StackPanel { Orientation = Orientation.Horizontal };
         brand.Children.Add(Text("◴", 34, true, "#C2F278", new Thickness(0, -6, 10, 0)));
@@ -70,12 +74,12 @@ public sealed class MainWindow : Window
         volume = new Slider { Minimum = 0, Maximum = 100, Value = app.Settings.Volume, Width = 105, VerticalAlignment = VerticalAlignment.Center, SmallChange = 1, LargeChange = 10, TickFrequency = 1, IsSnapToTickEnabled = true };
         AutomationProperties.SetName(volume, "Playback volume");
         volume.ValueChanged += (_, _) => { app.Radio.SetVolume((int)volume.Value); volumeLabel.Text = $"{(int)volume.Value}%"; };
-        volume.LostMouseCapture += (_, _) => app.Save(); volume.KeyUp += (_, _) => app.Save();
+        volume.ValueChanged += (_, _) => app.SaveSoon();
         volumePanel.Children.Add(volume); volumeLabel.Margin = new Thickness(8, 0, 0, 0); volumePanel.Children.Add(volumeLabel); controls.Children.Add(volumePanel);
         information.Children.Add(controls); playerGrid.Children.Add(information);
         var dial = new Grid { Width = 154, Height = 154, HorizontalAlignment = HorizontalAlignment.Right };
-        dial.Children.Add(new System.Windows.Shapes.Ellipse { Stroke = Brush("#3D5141"), StrokeThickness = 1 });
-        dial.Children.Add(new System.Windows.Shapes.Ellipse { Stroke = Brush("#C2F278"), StrokeThickness = 3, Margin = new Thickness(15) });
+        dial.Children.Add(new Avalonia.Controls.Shapes.Ellipse { Stroke = Brush("#3D5141"), StrokeThickness = 1 });
+        dial.Children.Add(new Avalonia.Controls.Shapes.Ellipse { Stroke = Brush("#C2F278"), StrokeThickness = 3, Margin = new Thickness(15) });
         var dialMark = Text("◴", 74, false, "#C2F278", new Thickness(0, -8, 0, 0));
         dialMark.HorizontalAlignment = HorizontalAlignment.Center; dialMark.VerticalAlignment = VerticalAlignment.Center;
         dial.Children.Add(dialMark);
@@ -87,20 +91,20 @@ public sealed class MainWindow : Window
         var tabs = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 20) };
         var names = new[] { "Stations", "Schedule", "Settings" };
         for (var i = 0; i < names.Length; i++) { var index = i; navigation[i] = Button(names[i], () => { tab = index; RefreshPage(); }); tabs.Children.Add(navigation[i]); }
-        section.Children.Add(tabs); section.Children.Add(pageTitle); pageDescription.Margin = new Thickness(0, 5, 0, 0); section.Children.Add(pageDescription);
+        section.Children.Add(notice); section.Children.Add(tabs); section.Children.Add(pageTitle); pageDescription.Margin = new Thickness(0, 5, 0, 0); section.Children.Add(pageDescription);
         Grid.SetRow(section, 2); shell.Children.Add(section);
         var scroll = new ScrollViewer { Content = page, Padding = new Thickness(0, 0, 8, 0) }; Grid.SetRow(scroll, 3); shell.Children.Add(scroll);
         var footer = new DockPanel { Margin = new Thickness(0, 18, 0, 0) };
         var local = Text("LOCAL TIME · " + TimeZoneInfo.Local.StandardName, 10, false, "#81989A"); DockPanel.SetDock(local, Dock.Right); footer.Children.Add(local); footer.Children.Add(upNext);
         Grid.SetRow(footer, 4); shell.Children.Add(footer);
-        Closing += (_, e) => { e.Cancel = true; app.HideToTray(); };
-        StateChanged += (_, _) => { if (WindowState == WindowState.Minimized) Hide(); };
+        Closing += (_, e) => { if (!app.Quitting) { e.Cancel = true; app.HideToTray(); } };
+
         app.Radio.Changed += UpdatePlayer;
         RefreshPage(); UpdatePlayer();
     }
 
     public static TextBlock Text(string text, double size = 14, bool bold = false, string color = "#EFF6F0", Thickness? margin = null) => new()
-    { Text = text, FontSize = size, FontWeight = bold ? FontWeights.SemiBold : FontWeights.Normal, Foreground = Brush(color), Margin = margin ?? new Thickness(), TextWrapping = TextWrapping.Wrap };
+    { Text = text, FontSize = size, FontWeight = bold ? FontWeight.SemiBold : FontWeight.Normal, Foreground = Brush(color), Margin = margin ?? new Thickness(), TextWrapping = TextWrapping.Wrap };
 
     public static Button Button(string label, Action action, bool accent = false)
     {
@@ -108,7 +112,7 @@ public sealed class MainWindow : Window
         if (accent) { button.Background = Brush("#C2F278"); button.Foreground = Brush("#172216"); }
         button.Click += (_, _) => action(); return button;
     }
-    public static Border Card(UIElement content, string color = "#192527", Thickness? padding = null) => new()
+    public static Border Card(Control content, string color = "#192527", Thickness? padding = null) => new()
     { Background = Brush(color), CornerRadius = new CornerRadius(12), Padding = padding ?? new Thickness(18), Child = content, Margin = new Thickness(0, 0, 0, 10) };
 
     private void UpdatePlayer()
@@ -158,10 +162,34 @@ public sealed class MainWindow : Window
         page.Children.Add(Text("Starter stations by SomaFM. Add your Greek favorites with their direct stream URLs.", 12, false, "#81989A", new Thickness(0, 6, 0, 8)));
     }
 
-    private void EditStation(Station? station)
+    private async void EditStation(Station? station)
     {
-        var editor = new StationDialog(app, station) { Owner = this };
-        if (editor.ShowDialog() == true) app.Refresh();
+        if (await OpenEditor(() => new StationDialog(app, station))) app.Refresh();
+    }
+
+    private bool editorOpen;
+    internal async Task<bool> OpenEditor(Func<EditorDialog> create)
+    {
+        if (editorOpen) return false;
+        editorOpen = true;
+        EditorDialog? editor = null;
+        try
+        {
+            editor = create();
+            return await editor.ShowDialog<bool>(this);
+        }
+        catch (Exception ex)
+        {
+            App.Log(ex);
+            // Report on the existing window: opening another dialog could hit the same failure.
+            ShowNotice("Could not open the editor: " + ex.Message);
+            return false;
+        }
+        finally
+        {
+            if (editor?.IsVisible == true) editor.Close(false);
+            editorOpen = false;
+        }
     }
 
     private void ShowSchedule()
@@ -189,25 +217,25 @@ public sealed class MainWindow : Window
             row.Children.Add(info); page.Children.Add(Card(row));
         }
         if (slots.Count == 0) page.Children.Add(Card(new StackPanel { Children = { Text("A little room for spontaneity.", 19, true), Text("No switches on " + Week[selectedDay] + ". Add a time slot to tune in automatically.", 13, false, "#9BB0B2", new Thickness(0, 8, 0, 0)) } }, padding: new Thickness(24)));
-        page.Children.Add(Text("Times follow your Windows time zone. Pause or pick a station manually until the next slot. After sleep, DialShift catches up with the current slot.", 12, false, "#81989A", new Thickness(0, 8, 0, 0)));
+        page.Children.Add(Text("Times follow your Mac’s time zone. Pause or pick a station manually until the next slot. After sleep, DialShift catches up with the current slot.", 12, false, "#81989A", new Thickness(0, 8, 0, 0)));
     }
 
-    private void EditSlot(ScheduleEntry? entry)
+    private async void EditSlot(ScheduleEntry? entry)
     {
-        var editor = new ScheduleDialog(app, entry, Week[selectedDay]) { Owner = this };
-        if (editor.ShowDialog() == true) { app.Radio.RefreshSchedule(); app.Refresh(); }
+        if (await OpenEditor(() => new ScheduleDialog(app, entry, Week[selectedDay]))) { app.Radio.RefreshSchedule(); app.Refresh(); }
     }
 
     private void ShowSettings()
     {
         pageTitle.Text = "Set it. Forget it."; pageDescription.Text = "Small preferences for your daily listening.";
         var startup = new StackPanel(); startup.Children.Add(Text("At your service", 18, true));
-        var login = new CheckBox { Content = "Launch DialShift in the tray when I sign in to Windows", IsChecked = app.Settings.LaunchAtLogin };
-        login.Click += (_, _) => { try { app.SetStartup(login.IsChecked == true); } catch (Exception ex) { login.IsChecked = app.Settings.LaunchAtLogin; MessageBox.Show(this, ex.Message, "Couldn't update startup"); } };
+        var login = new CheckBox { Content = "Launch DialShift in the menu bar when I sign in", IsChecked = app.Settings.LaunchAtLogin };
+        login.IsEnabled = OperatingSystem.IsMacOS();
+        login.Click += async (_, _) => { try { app.SetStartup(login.IsChecked == true); } catch (Exception ex) { login.IsChecked = app.Settings.LaunchAtLogin; await app.Notify(ex.Message); } };
         startup.Children.Add(login);
-        var hidden = new CheckBox { Content = "Start in the tray when opened normally", IsChecked = app.Settings.StartInTray };
+        var hidden = new CheckBox { Content = "Start in the menu bar when opened normally", IsChecked = app.Settings.StartInTray };
         hidden.Click += (_, _) => { app.Settings.StartInTray = hidden.IsChecked == true; app.Save(); }; startup.Children.Add(hidden);
-        startup.Children.Add(Text("Closing the window keeps your radio running. Choose Quit DialShift in the tray to exit.", 12, false, "#9BB0B2")); page.Children.Add(Card(startup));
+        startup.Children.Add(Text("Closing the window keeps your radio running. Choose Quit DialShift in the menu bar to exit.", 12, false, "#9BB0B2")); page.Children.Add(Card(startup));
         var recovery = new StackPanel(); recovery.Children.Add(Text("Keep the music going", 18, true));
         recovery.Children.Add(Text("Retry a failed stream, then use this station as a fallback. Try the original again every 2 minutes.", 12, false, "#9BB0B2", new Thickness(0, 7, 0, 6)));
         var fallback = new ComboBox { MaxWidth = 380, HorizontalAlignment = HorizontalAlignment.Left, MinWidth = 280 };
@@ -217,11 +245,13 @@ public sealed class MainWindow : Window
         fallback.SelectionChanged += (_, _) => { app.Settings.FallbackStationId = fallback.SelectedItem is Station s && s.Id != Guid.Empty ? s.Id : null; app.Save(); }; recovery.Children.Add(fallback); page.Children.Add(Card(recovery));
         var about = new StackPanel(); about.Children.Add(Text("DialShift  /  0.2.0", 16, true));
         about.Children.Add(Text("Your stations. Your schedule. Stored on this computer.", 13, false, "#9BB0B2", new Thickness(0, 6, 0, 14)));
-        about.Children.Add(Button("Open settings folder ↗", () => Process.Start(new ProcessStartInfo("explorer.exe", app.Store.DirectoryPath) { UseShellExecute = true })));
+        about.Children.Add(Button("Open settings folder ↗", () => app.OpenSettingsFolder()));
+        about.Children.Add(Button("Import stations & schedule…", async () => await app.ImportSettings()));
+        about.Children.Add(Button("Export stations & schedule…", async () => await app.ExportSettings()));
         page.Children.Add(Card(about));
     }
 
-    private sealed class UniformGridShim : System.Windows.Controls.Primitives.UniformGrid
+    private sealed class UniformGridShim : Avalonia.Controls.Primitives.UniformGrid
     {
         public UniformGridShim() { Rows = 1; Columns = 7; Margin = new Thickness(0, 0, 0, 15); }
     }
