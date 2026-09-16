@@ -2,9 +2,17 @@
 
 **Your radio, on time.** A native Windows tray radio with a weekly listening schedule.
 
-## Run
+## Download for Windows
 
-Open `artifacts/DialShift-win-x64/DialShift.exe`, or extract the release ZIP and open `DialShift.exe`. Keep the whole folder together: it includes .NET and VLC. No separate runtime or VLC installation is needed. Windows 10/11, x64.
+**[Download DialShift v0.1.0 for Windows (ZIP)](https://github.com/tsiger/DialShift/releases/download/v0.1.0/DialShift-0.1.0-win-x64.zip)** · [All releases](https://github.com/tsiger/DialShift/releases)
+
+1. Download the **DialShift-0.1.0-win-x64.zip** asset from the release above.
+2. Extract the entire ZIP to a folder.
+3. Open **DialShift.exe** inside that folder.
+
+Windows 10/11, x64. The portable app includes .NET and VLC; no separate dependencies or administrator rights are needed. Keep the whole extracted folder together, not just the `.exe`.
+
+GitHub's **Code → Download ZIP** and the automatically generated **Source code** archives contain source files, not the ready-to-run app. Use the download link above to listen without building anything.
 
 Optional install: right-click `Install.ps1` in the extracted release and choose **Run with PowerShell**. It copies the app to `%LOCALAPPDATA%\Programs\DialShift` and adds a Start menu shortcut, without administrator rights. It does not enable Windows startup unless you already chose that setting.
 
