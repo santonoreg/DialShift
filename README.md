@@ -48,6 +48,8 @@ intact. [More Mac setup, import and build instructions](MACOS.md).
 - **Stations → Add station:** enter a name, optional description and direct HTTP/HTTPS
   audio stream URL. MP3, AAC and HLS are supported. Use a stream URL, not the station's
   webpage or a playlist that requires choosing a child stream.
+  *(Windows: the Stations tab shows your stations as tiles — hover one and click **Play**
+  to tune in. Adding and editing stations lives in the **Edit stations** tab.)*
 - **Schedule → Add time slot:** choose a station, 24-hour start time and days. Add an
   optional show label. Conflicting enabled slots on the same day/time are rejected.
 - Turn on **Follow my schedule** to tune into the latest matching slot immediately.
