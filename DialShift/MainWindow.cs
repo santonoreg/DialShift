@@ -290,8 +290,19 @@ public sealed class MainWindow : Window
         fallback.SelectionChanged += (_, _) => { app.Settings.FallbackStationId = fallback.SelectedItem is Station s && s.Id != Guid.Empty ? s.Id : null; app.Save(); }; recovery.Children.Add(fallback); page.Children.Add(Card(recovery));
         var about = new StackPanel(); about.Children.Add(Text("DialShift  /  0.2.0", 16, true));
         about.Children.Add(Text("Your stations. Your schedule. Stored on this computer.", 13, false, "#9BB0B2", new Thickness(0, 6, 0, 14)));
-        about.Children.Add(Button("Open settings folder ↗", () => Process.Start(new ProcessStartInfo("explorer.exe", app.Store.DirectoryPath) { UseShellExecute = true })));
+        var actions = new StackPanel { Orientation = Orientation.Horizontal };
+        actions.Children.Add(Button("Open settings folder ↗", () => Process.Start(new ProcessStartInfo("explorer.exe", app.Store.DirectoryPath) { UseShellExecute = true })));
+        var export = Button("Export stations & schedule…", ExportSettings); export.Margin = new Thickness(10, 0, 0, 0); actions.Children.Add(export);
+        about.Children.Add(actions);
         page.Children.Add(Card(about));
+    }
+
+    private void ExportSettings()
+    {
+        var dialog = new Microsoft.Win32.SaveFileDialog { Title = "Export DialShift settings", FileName = "DialShift-settings.json", DefaultExt = ".json", Filter = "DialShift settings (*.json)|*.json" };
+        if (dialog.ShowDialog(this) != true) return;
+        try { app.Store.Save(app.Settings); System.IO.File.Copy(app.Store.FilePath, dialog.FileName, true); }
+        catch (Exception ex) { MessageBox.Show(this, ex.Message, "Couldn't export settings"); }
     }
 
     private sealed class UniformGridShim : System.Windows.Controls.Primitives.UniformGrid
